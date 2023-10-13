@@ -1,6 +1,6 @@
 {
   "name": "tg-react-activity-feed",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React components to create activity and notification feeds",
   "author": "TG",
   "license": "BSD-3-Clause",

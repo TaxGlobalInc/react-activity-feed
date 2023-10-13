@@ -601,7 +601,11 @@ export class FeedManager<
 
   doFeedRequest = async (options?: GetFeedOptions) => {
     if (this.props.doFeedRequest) {
-      return await this.props.doFeedRequest(this.props.client, this.props.feedGroup, this.props.userId, options);
+      const ids = await this.props.doFeedRequest(this.props.client, this.props.feedGroup, this.props.userId, options) as unknown as string[];
+      return await this.props.client.getActivities({
+        ids,
+        reactions: { recent: true, counts: true, own: false, kind: true },
+      }) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
     }
     return await this.feed().get(options);
   };

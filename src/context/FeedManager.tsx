@@ -1061,8 +1061,8 @@ export class FeedManager<
   };
 
   hasNextPage = () => {
-    const lastResponse = this.state.lastResponse;
-    return Boolean(lastResponse && (lastResponse.next || 'nextPage' in lastResponse));
+    const lastResponse = this.state.lastResponse as FeedAPIResponse<UT, AT, CT, RT, CRT> & { nextPage?: number };
+    return Boolean(lastResponse && (lastResponse.next || lastResponse.nextPage));
   };
 
   hasReverseNextPage = () => {
@@ -1072,7 +1072,7 @@ export class FeedManager<
 
   loadNextPage = async () => {
     const lastResponse = this.state.lastResponse as FeedAPIResponse<UT, AT, CT, RT, CRT> & { nextPage?: number };
-    if (!lastResponse || !(lastResponse.next || ('nextPage' in lastResponse))) {
+    if (!lastResponse || !(lastResponse.next || lastResponse.nextPage)) {
       return;
     }
     let cancel = false;

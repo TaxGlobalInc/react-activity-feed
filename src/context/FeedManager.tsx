@@ -24,6 +24,7 @@ import {
   ReactionFilterAPIResponse,
   EnrichedReaction,
   EnrichedReactionAPIResponse,
+  ForeignIDTimes,
 } from 'getstream';
 
 import { generateRandomId } from '../utils';
@@ -94,6 +95,12 @@ export type FeedManagerState<
   lastResponse?: FeedAPIResponse<UT, AT, CT, RT, CRT> | null;
   lastReverseResponse?: { next: string } | null;
 };
+
+export interface DoFeedResponseType {
+  items: ForeignIDTimes[];
+  count: number;
+  next?: number;
+}
 
 export class FeedManager<
   UT extends DefaultUT = DefaultUT,
@@ -601,11 +608,12 @@ export class FeedManager<
 
   doFeedRequest = async (options?: GetFeedOptions) => {
     if (this.props.doFeedRequest) {
-      const ids = await this.props.doFeedRequest(this.props.client, this.props.feedGroup, this.props.userId, options) as unknown as string[];
-      return await this.props.client.getActivities({
-        ids,
-        reactions: { recent: true, counts: true, own: false, kind: true },
-      }) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+      const data = await this.props.doFeedRequest(this.props.client, this.props.feedGroup, this.props.userId, options) as DoFeedResponseType;
+      const activities = await this.props.client.getActivities({
+        foreignIDTimes: data.items,
+        reactions: { recent: true, counts: true, own: true, kind: true },
+      });
+      return { ...activities, nextPage: data.next } as FeedAPIResponse<UT, AT, CT, RT, CRT>;
     }
     return await this.feed().get(options);
   };
@@ -1049,7 +1057,7 @@ export class FeedManager<
 
   hasNextPage = () => {
     const lastResponse = this.state.lastResponse;
-    return Boolean(lastResponse && lastResponse.next);
+    return Boolean(lastResponse && (lastResponse.next || 'nextPage' in lastResponse));
   };
 
   hasReverseNextPage = () => {
@@ -1059,7 +1067,7 @@ export class FeedManager<
 
   loadNextPage = async () => {
     const lastResponse = this.state.lastResponse;
-    if (!lastResponse || !lastResponse.next) {
+    if (!lastResponse || !lastResponse.next || !('nextPage' in lastResponse)) {
       return;
     }
     let cancel = false;
@@ -1075,8 +1083,13 @@ export class FeedManager<
       return;
     }
 
-    const nextURL = new URL(lastResponse.next, true);
-    const options = this.getOptions(nextURL.query);
+    let options;
+    if(lastResponse.next) {
+      const nextURL = new URL(lastResponse.next, true);
+      options = this.getOptions(nextURL.query);
+    } else if('nextPage' in lastResponse) {
+      options = this.getOptions({ nextPage: lastResponse.nextPage } as GetFeedOptions);
+    }
 
     let response: FeedAPIResponse<UT, AT, CT, RT, CRT>;
     try {

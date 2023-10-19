@@ -1072,7 +1072,7 @@ export class FeedManager<
 
   loadNextPage = async () => {
     const lastResponse = this.state.lastResponse as FeedAPIResponse<UT, AT, CT, RT, CRT> & { nextPage?: number };
-    if (!lastResponse || !lastResponse.next || !('nextPage' in lastResponse)) {
+    if (!lastResponse || !(lastResponse.next || ('nextPage' in lastResponse))) {
       return;
     }
     let cancel = false;

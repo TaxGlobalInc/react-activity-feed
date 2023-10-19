@@ -608,12 +608,17 @@ export class FeedManager<
 
   doFeedRequest = async (options?: GetFeedOptions) => {
     if (this.props.doFeedRequest) {
-      const data = await this.props.doFeedRequest(this.props.client, this.props.feedGroup, this.props.userId, options) as DoFeedResponseType;
+      const data = ((await this.props.doFeedRequest(
+        this.props.client,
+        this.props.feedGroup,
+        this.props.userId,
+        options,
+      )) as unknown) as DoFeedResponseType;
       const activities = await this.props.client.getActivities({
         foreignIDTimes: data.items,
         reactions: { recent: true, counts: true, own: true, kind: true },
       });
-      return { ...activities, nextPage: data.next } as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+      return ({ ...activities, nextPage: data.next } as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
     }
     return await this.feed().get(options);
   };
@@ -1066,7 +1071,7 @@ export class FeedManager<
   };
 
   loadNextPage = async () => {
-    const lastResponse = this.state.lastResponse;
+    const lastResponse = this.state.lastResponse as FeedAPIResponse<UT, AT, CT, RT, CRT> & { nextPage?: number };
     if (!lastResponse || !lastResponse.next || !('nextPage' in lastResponse)) {
       return;
     }
@@ -1084,10 +1089,10 @@ export class FeedManager<
     }
 
     let options;
-    if(lastResponse.next) {
+    if (lastResponse.next) {
       const nextURL = new URL(lastResponse.next, true);
       options = this.getOptions(nextURL.query);
-    } else if('nextPage' in lastResponse) {
+    } else if ('nextPage' in lastResponse) {
       options = this.getOptions({ nextPage: lastResponse.nextPage } as GetFeedOptions);
     }
 

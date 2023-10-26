@@ -1,6 +1,6 @@
 {
   "name": "tg-react-activity-feed",
-  "version": "1.0.2-beta-4",
+  "version": "1.0.2-beta-5",
   "description": "React components to create activity and notification feeds",
   "author": "TG",
   "license": "BSD-3-Clause",
@@ -126,7 +126,7 @@
     "@webscopeio/react-textarea-autocomplete": "^4.8.1",
     "classnames": "^2.3.1",
     "dayjs": "^1.10.4",
-    "emoji-mart": "^3.0.1",
+    "emoji-mart": "^5.5.2",
     "getstream": "^7.2.11",
     "i18next": "^20.2.2",
     "immutable": "^4.0.0-rc.12",

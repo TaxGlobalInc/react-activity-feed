@@ -608,6 +608,11 @@ export class FeedManager<
   };
 
   doFeedRequest = async (options?: GetFeedOptions) => {
+    const defaultResponse = ({
+      duration: "",
+      results: [],
+    } as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+
     if (this.props.doFeedRequest) {
       const data = ((await this.props.doFeedRequest(
         this.props.client,
@@ -618,23 +623,24 @@ export class FeedManager<
 
       const reactions = { recent: true, counts: true, own: true, kind: true };
 
-      if(data.items?.length) {
-        const activities = await this.props.client.getActivities({
-          foreignIDTimes: data.items,
-          reactions,
-        });
-        return ({ ...activities, nextPage: data.next } as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
-      } else if(data.activityId) {
-        const activities = await this.props.client.getActivities({
-          ids: [data.activityId],
-          reactions,
-        });
-        return (activities as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+      try {
+        if(data.items?.length) {
+          const activities = await this.props.client.getActivities({
+            foreignIDTimes: data.items,
+            reactions,
+          });
+          return ({ ...activities, nextPage: data.next } as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+        } else if(data.activityId) {
+          const activities = await this.props.client.getActivities({
+            ids: [data.activityId],
+            reactions,
+          });
+          return (activities as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>;
+        }
+      } catch(e) {
+        return defaultResponse;
       }
-      return ({
-        duration: "",
-        results: [],
-      } as unknown) as FeedAPIResponse<UT, AT, CT, RT, CRT>
+      return defaultResponse;
     }
     return await this.feed().get(options);
   };
